@@ -8,7 +8,7 @@
 #define ACCELERATION 10
 
 // Behaviour modes
-#define MODE_SELECT  0
-#define MODE_REMOTE  1
-#define MODE_MEANDER 2
-#define MODE_BROWNIAN 3
+#define MODE_NOT_SET 0
+#define MODE_MODE_SELECT  1
+#define MODE_REMOTE_CONTROL  2
+#define MODE_LINEFOLLOW 3
