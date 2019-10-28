@@ -6,9 +6,9 @@
 #include "M0BOT.h"
 
 // RGB LED control
-#include <Adafruit_DotStar.h>
-Adafruit_DotStar RGBLED = Adafruit_DotStar(
-  1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR);
+
+//Adafruit_DotStar RGBLED = Adafruit_DotStar(
+//  1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR);
 
 // Infrared receiver
 #include <IRremote.h>
@@ -23,15 +23,34 @@ unsigned Speed = 0;
 bool Left_Turn = false;
 bool Right_Turn = false;
 
+
+
+class Flasher: public  Adafruit_DotStar{
+public:
+  Flasher(): Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR){};
+  void colour(uint8_t r, uint8_t g, uint8_t b);
+};
+
+void Flasher::colour(uint8_t r, uint8_t g, uint8_t b){
+
+ setPixelColor(0, r, g, b);
+ show();
+  
+}
+
+//Adafruit_DotStar aFlasher = Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR);
+
+Flasher aFlasher;
+
 void setup() {
 
   Serial.begin(115200); // open serial port
 
   irrecv.enableIRIn(); // Start the IR receiver
 
-  RGBLED.begin();   // start RGB LED controller
-  RGBLED.setPixelColor(0, 0, 0, 32); RGBLED.show(); //red
-  
+  aFlasher.begin();   // start RGB LED controller
+  aFlasher.colour(32,32, 32);
+
   pinMode(LMOTOR, OUTPUT);
   pinMode(RMOTOR, OUTPUT);
   digitalWrite(LMOTOR, LOW);
@@ -43,7 +62,7 @@ void setup() {
 
 void loop() {
 
- 
+
 
   // get IR message
   if (irrecv.decode(&results)) { // if new message received
@@ -51,7 +70,7 @@ void loop() {
     if (Message==IRCODE_REPEAT) Message = LastMessage;
     else LastMessage = Message;
    // Serial.println(Message);
-    
+
     if (MODE==MODE_MODE_SELECT) {
       switch (Message) {
         case IRCODE_0:
@@ -61,7 +80,7 @@ void loop() {
         case IRCODE_1:
           MODE = MODE_LINEFOLLOW;
           Serial.println("Line follow mode");
-          break;                            
+          break;
       }
     }
     else {
@@ -83,24 +102,24 @@ void loop() {
               // nb Speed is unsigned, can't go <0
               if (Speed>=ACCELERATION) Speed -= ACCELERATION;
               else Speed = 0;
-              break;              
+              break;
             case IRCODE_LEFT:
               Left_Turn = true;
-              break;                
+              break;
             case IRCODE_RIGHT:
               Right_Turn = true;
-              break;               
+              break;
         }
       }
-//    Serial.print("Speed = " );  Serial.print(Speed); 
+//    Serial.print("Speed = " );  Serial.print(Speed);
 //    Serial.print(", Left_Turn = "); Serial.print(Left_Turn);
 //    Serial.print(", Right_Turn = "); Serial.println(Right_Turn);
-    
+
     }
     irrecv.resume(); // Receive the next value
 
   }
-  
+
   // move
   digitalWrite(LMOTOR, LOW);
   digitalWrite(RMOTOR, LOW);
@@ -109,12 +128,12 @@ void loop() {
   }
   else if (Right_Turn) {
     digitalWrite(LMOTOR, HIGH);
-  }  
+  }
       else {
         if (random(100) < Speed ) digitalWrite(LMOTOR, HIGH);
         if (random(100) < Speed) digitalWrite(RMOTOR, HIGH);
       }
-      
+
   delay(1);
   Tick++;
 }

@@ -1,5 +1,6 @@
 // Trinket M0 Bristlebot header
 
+#include <Adafruit_DotStar.h>
 #include "M0BOT_IRCODES.h"
 
 #define IRRCV_PIN 0
