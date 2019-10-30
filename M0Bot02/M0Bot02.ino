@@ -23,37 +23,33 @@ unsigned Speed = 0;
 bool Left_Turn = false;
 bool Right_Turn = false;
 
-uint8_t Colours1[2][3] = {{64,0,0}, {0,64,0}};
-uint16_t ms1[2] = {100,200};
+uint8_t ColoursRG[2][3] = {{64,0,0}, {0,64,0}};
+
 
 class Flasher: public  Adafruit_DotStar{
 
   uint8_t n;        // number of colours in sequence
   uint8_t i;        // current colour
   unsigned long onTime; // time when current colour switched on (from millis())
-  uint8_t (*C)[3];  // pointer to nx3 colour array
-  uint16_t* ms;  // pointer to 1xn array of times per colour in ms
+  uint8_t (*pClr)[3];   // pointer to nx3 colour array
+  uint16_t msFlash;     // ms per flash
 public:
-  // default constructor (no sequence data - use for "manual" colour setting)
+  // default constructor 
+  // can be used for manual color setting via 
   Flasher(): Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR){
     i=0;
     n = 0;  // ensures that flash() is harmless when colour data not specified
     }
-  // constructor for sequence of n colours each on for msTime[i]
-  Flasher(uint8_t nColours, uint8_t (*Colour)[3], uint16_t* msTime): 
+  // constructor for sequence of n colours each on for ms
+  Flasher(uint8_t nColours, uint8_t (*pC)[3], uint16_t ms): 
       Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR){
         i = 0;
         n = nColours;
-        C = Colour;  // C points to (global) colour array
-        ms = msTime; // ms points to timing array       
+        pClr = pC;  // points to (global) colour array
+        msFlash = ms; // ms per flash     
         };
   // set LED color RGB
   void colour(uint8_t r, uint8_t g, uint8_t b);
-//  // activate colour sequence
-//  void flash(void);
-//  // deactivate sequence
-//  void off(void);
-//  
   
 };
 
@@ -67,11 +63,9 @@ void Flasher::colour(uint8_t r, uint8_t g, uint8_t b){
 //Adafruit_DotStar aFlasher = Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR);
 
 
-Flasher *aFlasher = new Flasher(2,Colours1, ms1);
-Flasher *bFlasher = new Flasher(2,Colours1, ms1);
-Flasher *flashing = aFlasher;
-
-flashing = bFlasher;
+Flasher noFlasher = Flasher();
+Flasher rgFlasher = Flasher(2,ColoursRG, 250);
+Flasher* theFlasher;
 
 void setup() {
 
@@ -79,15 +73,15 @@ void setup() {
 
   irrecv.enableIRIn(); // Start the IR receiver
 
-  aFlasher.begin();   // start RGB LED controller
-  aFlasher.colour(64,0, 0);
+  noFlasher.begin();   // start RGB LED controller
+  noFlasher.colour(0,64, 0);
 
   pinMode(LMOTOR, OUTPUT);
   pinMode(RMOTOR, OUTPUT);
   digitalWrite(LMOTOR, LOW);
   digitalWrite(RMOTOR, LOW);
 
-  Tick = 0;
+  theFlasher = &noFlasher;
 
 }
 
