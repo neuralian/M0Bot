@@ -46,11 +46,11 @@ void loop() {
           Serial.println("Remote control mode");
           break;
         case IRCODE_1:
-          MODE = MODE_MEANDER;
+   //       MODE = MODE_MEANDER;
           Serial.println("Meander mode");
           break;          
         case IRCODE_2:
-          MODE = MODE_BROWNIAN;
+    //      MODE = MODE_BROWNIAN;
           Serial.println("Brownian motion mode");
           break;                    
       }

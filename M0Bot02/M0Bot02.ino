@@ -15,6 +15,8 @@
 IRrecv irrecv(IRRCV_PIN);
 decode_results results;
 
+
+
 unsigned Tick;
 unsigned MODE = -99;
 unsigned Message = 0;
@@ -26,6 +28,7 @@ bool Right_Turn = false;
 // colour sequences
 uint8_t Colourseq_RG[2][3] = {{64,0,0}, {0,64,0}};
 uint8_t Colourseq_RedBlink[2][3] = {{64,0,0}, {0,0,0}};
+uint8_t Colourseq_RGB[3][3] = {{64,0,0}, {0,64,0}, {0,0,64}};
 
 class Flasher: public  Adafruit_DotStar{
 public:
@@ -37,13 +40,13 @@ public:
 
   // default constructor 
   // can be used for manual color setting via colour() method
-  Flasher(): Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR){
+  Flasher(): Adafruit_DotStar(1, M0_DOTSTAR_DATA, M0_DOTSTAR_CLK, DOTSTAR_BGR){
     i=0;
     n = 0;  // ensures that flash() is harmless when colour data not specified
     }
   // constructor for sequence of n colours each on for ms
   Flasher(uint8_t nColours, uint8_t (*pC)[3], uint16_t ms): 
-      Adafruit_DotStar(1, INTERNAL_DS_DATA, INTERNAL_DS_CLK, DOTSTAR_BGR){
+      Adafruit_DotStar(1, M0_DOTSTAR_DATA, M0_DOTSTAR_CLK, DOTSTAR_BGR){
         i = 0;
         n = nColours;
         pClr = pC;  // points to (global) colour array
@@ -72,6 +75,7 @@ void Flasher::vcolour(uint8_t* rgb){
 Flasher noFlasher = Flasher();
 Flasher rgFlasher = Flasher(2,Colourseq_RG, 200);
 Flasher redBlinkFlasher = Flasher(2,Colourseq_RedBlink, 200);
+Flasher rgbFlasher = Flasher(3,Colourseq_RGB, 100);
 Flasher* theFlasher = &noFlasher;
 
 // flash theFlasher
@@ -105,7 +109,7 @@ void setup() {
   digitalWrite(LMOTOR, LOW);
   digitalWrite(RMOTOR, LOW);
 
-  theFlasher = &redBlinkFlasher;
+  theFlasher = &rgbFlasher;
 
 }
 
