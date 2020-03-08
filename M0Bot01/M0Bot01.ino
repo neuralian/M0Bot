@@ -25,14 +25,14 @@ void setup() {
   
   pinMode(LMOTOR, OUTPUT);
   pinMode(RMOTOR, OUTPUT);
+  pinMode(LSENSOR, INPUT);
+  pinMode(RSENSOR, INPUT);
 
 }
 
-void loop() {
+unsigned getIRbuttonpress(){
 
-
-
-  // get IR message
+ // get IR message
   if (irrecv.decode(&results)) { // if new message received
     Message = results.value;
     if (Message==IRCODE_REPEAT) Message = LastMessage;
@@ -50,8 +50,8 @@ void loop() {
           Serial.println("Meander mode");
           break;          
         case IRCODE_2:
-    //      MODE = MODE_BROWNIAN;
-          Serial.println("Brownian motion mode");
+    //      MODE = MODE_LEARN_LINE;
+          Serial.println("Learn line mode: move light sensors back and forth across line");
           break;                    
       }
     }
@@ -62,7 +62,8 @@ void loop() {
       }
       else switch (MODE) {
 
-       case MODE_REMOTE:
+       case MODE_REMOTE:  // control M0Bot with IR remote
+       
           Left_Turn = false;
           Right_Turn = false;
           switch (Message){
@@ -81,7 +82,19 @@ void loop() {
             case IRCODE_RIGHT:
               Right_Turn = true;
               break;               
-        }
+           }
+        break;  // end case MODE_REMOTE
+        
+        case MODE_LEARN_LINE:   // set detection thresholds for line following 
+                                // (move sensors back and forth across line)
+
+        Serial.print(analogRead(LSENSOR));
+        Serial.print(", ");
+        Serial.println(analogRead(RSENSOR));
+
+        break; // end case MODE_LEARN_LINE
+
+        
       }
 //    Serial.print("Speed = " );  Serial.print(Speed); 
 //    Serial.print(", Left_Turn = "); Serial.print(Left_Turn);
@@ -91,6 +104,17 @@ void loop() {
     irrecv.resume(); // Receive the next value
 
   }
+
+  
+}
+
+
+
+void loop() {
+
+
+getIRbuttonpress() ;
+ 
   
   // move
   if (Left_Turn) {

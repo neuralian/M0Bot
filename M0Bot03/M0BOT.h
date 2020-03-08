@@ -7,12 +7,10 @@
 #define IRRCV_PIN 0
 #define LMOTOR 1
 #define RMOTOR 4
-#define LSENSOR 2
+#define LSENSOR 1
 #define RSENSOR 3
 
 #define ACCELERATION 10
-
-
 
 // Behaviour modes
 #define MODE_NOT_SET 0
