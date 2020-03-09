@@ -16,6 +16,8 @@ unsigned lastKeyPress = 0;
 unsigned Speed = 0;
 bool Left_Turn = false;
 bool Right_Turn = false;
+unsigned Lthreshold;
+unsigned Rthreshold; //line color sensor thresholds
 
 void setup() {
 
@@ -58,24 +60,56 @@ void selectMode() {
       case IRCODE_0:
         MODE = MODE_REMOTE;
         Serial.println("Remote control mode");
-        break;
+        break;     
       case IRCODE_1:
-    //    MODE = MODE_MEANDER;
-        Serial.println("Meander mode");
-        break;          
-      case IRCODE_2:
         MODE = MODE_LEARN_LINE;
         Serial.println("Learn line mode: move light sensors back and forth across line");
         break;                    
-    }
+      case IRCODE_2:
+        MODE = MODE_FOLLOW_LINE;
+        Serial.println("Follow line mode");
+        break;   
+       default: 
+        Serial.println("Unrecognized/unassigned keypress");
+        MODE = MODE_DO_NOTHING;
+        }
   }
 }
 
 void learnLineColors(void) {
 
-  
-}
+  unsigned Lhigh =  0;
+  unsigned Rhigh =  0;
+  unsigned Llow =   1024;
+  unsigned Rlow =   1024;
+
+  while (!keyPressed()) {
+    unsigned L_sensor_reading = analogRead(LSENSOR);
+    Lhigh = L_sensor_reading > Lhigh ? L_sensor_reading : Lhigh;
+    Llow = L_sensor_reading  < Llow  ? L_sensor_reading : Llow;
+    
+    unsigned R_sensor_reading = analogRead(RSENSOR);
+    Rhigh = R_sensor_reading > Rhigh ? R_sensor_reading : Rhigh;
+    Rlow = R_sensor_reading  < Rlow  ? R_sensor_reading : Rlow;
         
+    Serial.print(L_sensor_reading);
+    Serial.print(", ");
+    Serial.println(R_sensor_reading);
+    delay(50); 
+    }
+
+    Lthreshold = (Lhigh+Llow)/2;
+    Rthreshold = (Rhigh+Rlow)/2;
+}
+
+void followline(void){
+
+
+  Serial.println(Lthreshold);
+  Serial.println(", ");
+  Serial.println(Rthreshold);
+
+}
 
 
 void loop() {   
@@ -116,23 +150,25 @@ void loop() {
            }
         break;  // end case MODE_REMOTE
         
-        case MODE_LEARN_LINE:   // set detection thresholds for line following 
-                                // (move sensors back and forth across line)
+        case MODE_LEARN_LINE:   // set detection thresholds for line following                             
 
-        learnLineColors();
+          learnLineColors();
+          break; // end case MODE_LEARN_LINE
 
-        while (!keyPressed()) {
-        Serial.print(analogRead(LSENSOR));
-        Serial.print(", ");
-        Serial.println(analogRead(RSENSOR));
-//        getKeyPressed();
-//        Serial.println(keyPress);
-        delay(100);
-        }
-        break; // end case MODE_LEARN_LINE
-    }
-        
+        case MODE_FOLLOW_LINE:
+
+          followline();
+          break; // end case MODE_FOLLOW_LINE
+
+        case MODE_DO_NOTHING:
+
+           // do nothing
+           break;
+
+          default: // do nothing
+          ;
       }
+    }
   
   // behaviour
   if (Left_Turn) {
