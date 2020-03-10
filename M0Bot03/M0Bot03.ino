@@ -27,8 +27,7 @@ void setup() {
   
   pinMode(LMOTOR, OUTPUT);
   pinMode(RMOTOR, OUTPUT);
-  pinMode(LSENSOR, INPUT);
-  pinMode(RSENSOR, INPUT);
+
 
 }
 
@@ -70,7 +69,7 @@ void selectMode() {
         Serial.println("Follow line mode");
         break;   
        default: 
-        Serial.println("Unrecognized/unassigned keypress");
+        Serial.println("Waiting for Mode command");
         MODE = MODE_DO_NOTHING;
         }
   }
@@ -100,15 +99,38 @@ void learnLineColors(void) {
 
     Lthreshold = (Lhigh+Llow)/2;
     Rthreshold = (Rhigh+Rlow)/2;
+
+    MODE = MODE_DO_NOTHING;
+    
 }
 
 void followline(void){
 
+ while (!keyPressed()) {
+  
+  bool Loffline = analogRead(LSENSOR) > Lthreshold ? true : false;
+  bool Roffline = analogRead(RSENSOR) < Rthreshold ? true : false;
 
-  Serial.println(Lthreshold);
-  Serial.println(", ");
-  Serial.println(Rthreshold);
+  Serial.print(Loffline); Serial.print(", ");  Serial.println(Roffline); 
+  
+  if (Loffline && !Roffline) {
+    digitalWrite(LMOTOR, HIGH);
+    digitalWrite(RMOTOR, LOW);
+  }
+  if (!Loffline && Roffline) {
+    digitalWrite(LMOTOR, LOW);
+    digitalWrite(RMOTOR, HIGH);
+  } 
+  if ((Loffline && Roffline) || (!Loffline && !Roffline)){
+    digitalWrite(LMOTOR, HIGH);
+    digitalWrite(RMOTOR, HIGH);   
+  }
 
+  delay(10);
+  
+ } 
+
+  MODE = MODE_DO_NOTHING;
 }
 
 
