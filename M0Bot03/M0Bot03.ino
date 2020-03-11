@@ -19,6 +19,81 @@ bool Right_Turn = false;
 unsigned Lthreshold;
 unsigned Rthreshold; //line color sensor thresholds
 
+
+// colour sequences
+uint8_t Colourseq_RG[2][3] = {{64,0,0}, {0,64,0}};
+uint8_t Colourseq_RedBlink[2][3] = {{64,0,0}, {0,0,0}};
+uint8_t Colourseq_RGB[3][3] = {{64,0,0}, {0,64,0}, {0,0,64}};
+
+class Flasher: public  Adafruit_DotStar{
+public:
+  uint8_t n;        // number of colours in sequence
+  uint8_t i;        // current colour
+  unsigned long onTime = 0; // time when current colour switched on (from millis())
+  uint8_t (*pClr)[3];   // pointer to nx3 colour array
+  uint16_t msFlash;     // ms per flash
+
+  // default constructor 
+  // can be used for manual color setting via colour() method
+  Flasher(): Adafruit_DotStar(1, 7, 8, DOTSTAR_BGR){
+    i=0;
+    n = 0;  // ensures that flash() is harmless when colour data not specified
+    }
+  // constructor for sequence of n colours each on for ms
+  Flasher(uint8_t nColours, uint8_t (*pC)[3], uint16_t ms): 
+      Adafruit_DotStar(1, 7, 8, DOTSTAR_BGR){
+        i = 0;
+        n = nColours;
+        pClr = pC;  // points to (global) colour array
+        msFlash = ms; // ms per flash     
+        };
+  // set LED color RGB
+  void colour(uint8_t r, uint8_t g, uint8_t b);
+  void vcolour(uint8_t rgb[3]);
+  
+};
+
+void Flasher::colour(uint8_t r, uint8_t g, uint8_t b){
+
+ setPixelColor(0, r, g, b);
+ show();
+  
+}
+
+void Flasher::vcolour(uint8_t* rgb){
+
+ setPixelColor(0, rgb[0], rgb[1], rgb[2]);
+ show();
+  
+}
+
+Flasher noFlasher = Flasher();
+Flasher rgFlasher = Flasher(2,Colourseq_RG, 200);
+Flasher redBlinkFlasher = Flasher(2,Colourseq_RedBlink, 200);
+Flasher rgbFlasher = Flasher(3,Colourseq_RGB, 100);
+Flasher* theFlasher = &noFlasher;
+
+// flash theFlasher
+void flash(void){
+
+  // if flash time has elapsed
+  if(millis()-theFlasher->onTime > theFlasher->msFlash){
+   // next colour index; cycling
+   theFlasher->i++; if (theFlasher->i>=theFlasher->n) theFlasher->i=0;
+   // set colour
+   theFlasher->vcolour(*(theFlasher->pClr+theFlasher->i));
+   // reset timer
+   theFlasher->onTime = millis();
+    
+  }
+
+  
+}
+
+
+
+
+
 void setup() {
 
   Serial.begin(115200); // open serial port
@@ -27,6 +102,9 @@ void setup() {
   
   pinMode(LMOTOR, OUTPUT);
   pinMode(RMOTOR, OUTPUT);
+
+  
+  theFlasher = &rgbFlasher;
 
 
 }
@@ -91,12 +169,15 @@ void selectMode() {
 
 void learnLineColors(void) {
 
+    theFlasher = &redBlinkFlasher;
+
   unsigned Lhigh =  0;
   unsigned Rhigh =  0;
   unsigned Llow =   1024;
   unsigned Rlow =   1024;
 
   while (!keyPressed()) {
+    flash();
     unsigned L_sensor_reading = analogRead(LSENSOR);
     Lhigh = L_sensor_reading > Lhigh ? L_sensor_reading : Lhigh;
     Llow = L_sensor_reading  < Llow  ? L_sensor_reading : Llow;
@@ -115,6 +196,7 @@ void learnLineColors(void) {
     Rthreshold = (Rhigh+Rlow)/2;
 
     MODE = MODE_DO_NOTHING;
+    theFlasher = &noFlasher;
     
 }
 
@@ -184,6 +266,8 @@ void followline(void){
 
 
 void loop() {   
+  
+  flash();
 
     // If a key was pressed on the remote,
     //   update global variables keyPressed and lastKeyPressed 
