@@ -31,6 +31,20 @@ void setup() {
 
 }
 
+
+void move(int leftSpeed, int rightSpeed) {
+
+  // nb left speed increase causes right turn etc.
+
+  if (random(100) < leftSpeed) digitalWrite(LMOTOR, HIGH);
+  else digitalWrite(LMOTOR, LOW);
+
+  if (random(100) < rightSpeed) digitalWrite(RMOTOR, HIGH);
+  else digitalWrite(RMOTOR, LOW);
+       
+}
+
+
 bool keyPressed(){return (irrecv.decode(&IRmessage));}
 
 
@@ -106,24 +120,59 @@ void learnLineColors(void) {
 
 void followline(void){
 
+  // assuming track is darker, low light reading indicates sensor is on track.
+  // sensor states:
+  //  0   : both on track
+  //  1   : left off, right on track
+  //  2   : left on, right off track
+  //  3   : both off track
+  
+  int previousState = 0;
+  int sensorState = 0;
+
+  int speed = 80;
+
  while (!keyPressed()) {
   
-  bool Loffline = analogRead(LSENSOR) > Lthreshold ? true : false;
-  bool Roffline = analogRead(RSENSOR) < Rthreshold ? true : false;
+  int Lbright = analogRead(LSENSOR) > Lthreshold ? 1 : 0;
+  int Rbright = analogRead(RSENSOR) < Rthreshold ? 2 : 0;
 
-  Serial.print(Loffline); Serial.print(", ");  Serial.println(Roffline); 
-  
-  if (Loffline && !Roffline) {
-    digitalWrite(LMOTOR, HIGH);
-    digitalWrite(RMOTOR, LOW);
-  }
-  if (!Loffline && Roffline) {
-    digitalWrite(LMOTOR, LOW);
-    digitalWrite(RMOTOR, HIGH);
-  } 
-  if ((Loffline && Roffline) || (!Loffline && !Roffline)){
-    digitalWrite(LMOTOR, HIGH);
-    digitalWrite(RMOTOR, HIGH);   
+  sensorState = Lbright + Rbright;
+
+  // actions
+  switch (sensorState) {
+
+    case 0:  
+
+       // both sensors on track: go ahead
+       move(speed, speed);
+       previousState = 0;
+       break;
+
+    case 1: 
+
+       // left off track, right on track: turn right a little bit
+       move(speed,speed/2);
+       previousState = 1;
+       break;
+
+    case 2:
+
+       // left on track, right off track: turn left a little bit
+       move(speed/2, speed);
+       previousState = 2;
+       break;
+
+
+    case 3: 
+
+       // both sensors off track
+       // if left sensor was previously on track, we've gone off to the right: turn left
+       if (previousState==2) move(speed/2, speed);
+       // else right sensor was previously on track, we've gone off to the left: turn right
+       else move(speed,speed/2);
+       break;
+
   }
 
   delay(10);
