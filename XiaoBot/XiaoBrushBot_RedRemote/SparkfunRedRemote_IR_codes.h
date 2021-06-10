@@ -1,0 +1,12 @@
+// Sparkfun red remote codes
+
+#define IRCODE_POWER  0x10EFD827
+#define IRCODE_A      0x10EFF807
+#define IRCODE_B      0x10EF7887
+#define IRCODE_C      0x10EF58A7
+#define IRCODE_UP	  0x10EFA05F
+#define IRCODE_LEFT   0x10EF10EF
+#define IRCODE_O      0x10EF20DF
+#define IRCODE_RIGHT  0x10EF807F
+#define IRCODE_DOWN   0x10EF00FF
+#define IRCODE_REPEAT 0xFFFFFFFF
